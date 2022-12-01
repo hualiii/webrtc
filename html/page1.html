@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+</body>
+<script>
+    // 使用WebSocket的地址向服务端开启连接
+    let ws = new WebSocket('ws://localhost:3000');
+
+    // 开启后的动作，指定在连接后执行的事件
+    ws.onopen = () => {
+        console.log('open connection');
+    };
+
+    // 接收服务端发送的消息
+    ws.onmessage = (event) => {
+        console.log(event);
+    };
+    ws.onoffer = (event) => {
+        console.log(event);
+    };
+    
+    // 指定在关闭后执行的事件
+    ws.onclose = () => {
+        console.log('close connection');
+    };
+</script>
+
+</html>
