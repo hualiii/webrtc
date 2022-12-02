@@ -10,16 +10,15 @@
 
 <body>
     <div id="app">
-        <video id="leftVideo" playsinline controls loop muted>
+        <!-- <video id="leftVideo" playsinline controls loop muted>
             <source src="./src/chrome.webm" type="video/webm" />
             <source src="./src/chrome.mp4" type="video/mp4" />
             <p>This browser does not support the video element.</p>
-        </video>
+        </video> -->
         <!-- <video id="rightVideo" playsinline autoplay muted></video> -->
     </div>
 </body>
 <script>
-    let localStream
     // 使用WebSocket的地址向服务端开启连接
     let ws = new WebSocket("ws://192.168.10.109:3000");
     // 开启后的动作，指定在连接后执行的事件
@@ -32,21 +31,26 @@
         console.log("ws close connection");
     };
     const createLocalMediaStream = async () => {
-        const leftVideo = document.getElementById('leftVideo');
-        leftVideo.addEventListener('canplay', async () => {
-            let stream;
-            const fps = 0;
-            if (leftVideo.captureStream) {
-                stream = leftVideo.captureStream(fps);
-            } else if (leftVideo.mozCaptureStream) {
-                stream = leftVideo.mozCaptureStream(fps);
-            } else {
-                console.error('Stream capture is not supported');
-                stream = null;
-            }
-            localStream = stream;
+        navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then(async(Mediastream) => {
+            localStream = Mediastream;
             await createPeerConnection()
-        });
+        }).catch(err => {
+            alert(err)
+        })
+        // leftVideo.addEventListener('canplay', async () => {
+        //     let stream;
+        //     const fps = 0;
+        //     if (leftVideo.captureStream) {
+        //         stream = leftVideo.captureStream(fps);
+        //     } else if (leftVideo.mozCaptureStream) {
+        //         stream = leftVideo.mozCaptureStream(fps);
+        //     } else {
+        //         console.error('Stream capture is not supported');
+        //         stream = null;
+        //     }
+        //     localStream = stream;
+        //     await createPeerConnection()
+        // });
     }
     const createPeerConnection = async () => {
         const peerA = new RTCPeerConnection()
