@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+</head>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+<body>
+    <div id="app">
+        <input type="text" v-model="message" />
+        <button @click="send">send</button>
+        <ul>
+            <li v-for="item in list">
+                {{item.name}}:{{item.message}}
+            </li>
+        </ul>
+    </div>
+</body>
+<script>
+    // webrtc
+    const rc = new RTCPeerConnection();
+    // vue
+    const { createApp } = Vue
+    createApp({
+        data() {
+            return {
+                message: 'Hello Vue!',
+                list: [],
+            }
+        },
+        methods: {
+            send() {
+                this.list.push({
+                    name: "user2",
+                    message: this.message
+                })
+                rc.dc.send(this.message);
+                this.message = ''
+            }
+        },
+        mounted() {
+            rc.onicecandidate = (e) => {
+                const answer = {
+                    type: "answer",
+                    sdp: JSON.stringify(rc.localDescription),
+                };
+                ws.send(JSON.stringify(answer));
+            };
+            rc.ondatachannel = (e) => {
+                rc.dc = e.channel;
+                rc.dc.onmessage = (e) => {
+                    console.log("new meaasge from client!" + e.data);
+                    this.list.push({
+                        name: 'user1',
+                        message: e.data
+                    })
+                }
+                rc.dc.onopen = (e) => console.log("Connection opend!!!!!!!");
+            };
+            // 使用WebSocket的地址向服务端开启连接
+            let ws = new WebSocket("ws://localhost:3000");
+
+            // 开启后的动作，指定在连接后执行的事件
+            ws.onopen = () => {
+                console.log("open connection");
+            };
+
+            // 接收服务端发送的消息
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === "offer") {
+                    console.log("22222", data);
+                    rc.setRemoteDescription(JSON.parse(data.sdp)).then((e) =>
+                        console.log("offer set")
+                    );
+                    rc.createAnswer()
+                        .then((a) => rc.setLocalDescription(a))
+                        .then((a) => console.log("answer created"));
+                }
+            };
+            ws.onoffer = (event) => {
+                console.log(event);
+            };
+
+            // 指定在关闭后执行的事件
+            ws.onclose = () => {
+                console.log("close connection");
+            };
+        }
+    }).mount('#app')
+</script>
+
+</html>
