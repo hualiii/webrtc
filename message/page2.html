@@ -62,7 +62,7 @@
                 rc.dc.onopen = (e) => console.log("Connection opend!!!!!!!");
             };
             // 使用WebSocket的地址向服务端开启连接
-            let ws = new WebSocket("ws://localhost:3000");
+            let ws = new WebSocket("ws://192.168.10.109:3000");
 
             // 开启后的动作，指定在连接后执行的事件
             ws.onopen = () => {

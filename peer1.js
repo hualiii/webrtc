@@ -3,9 +3,6 @@ const lc = new RTCPeerConnection()
 // 数据频道
 const dc = lc.createDataChannel('channel')
 
-dc.onmessage = e => console.log('just got a message' + e.data)
-
-dc.onopen = e => console.log('Connection opend!')
 
 
 lc.onicecandidate = e => console.log('new icecandidate sdp', JSON.stringify(lc.localDescription))

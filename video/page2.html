@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>user2</title>
+</head>
+
+<body>
+    <div id="app">
+        <video id="leftVideo" playsinline controls loop muted>
+            <source src="./src/chrome.webm" type="video/webm" />
+            <source src="./src/chrome.mp4" type="video/mp4" />
+            <p>This browser does not support the video element.</p>
+        </video>
+        <video id="rightVideo" playsinline autoplay muted></video>
+    </div>
+</body>
+<script>
+    let localStream
+
+    const createLocalMediaStream = async () => {
+        const leftVideo = document.getElementById('leftVideo');
+        leftVideo.addEventListener('canplay', async () => {
+            let stream;
+            const fps = 0;
+            if (leftVideo.captureStream) {
+                stream = leftVideo.captureStream(fps);
+            } else if (leftVideo.mozCaptureStream) {
+                stream = leftVideo.mozCaptureStream(fps);
+            } else {
+                console.error('Stream capture is not supported');
+                stream = null;
+            }
+            localStream = stream;
+            await createPeerConnection()
+        });
+    }
+    const createPeerConnection = async () => {
+        const peerA = new RTCPeerConnection()
+        const peerB = new RTCPeerConnection()
+
+        // 添加本地媒体流
+        localStream.getTracks().forEach((track) => {
+            peerA.addTrack(track, localStream)
+        })
+
+        // 监听 ice 候选项事件
+        peerA.onicecandidate = (event) => {
+            if (event.candidate) {
+                peerB.addIceCandidate(event.candidate) // 设置 ice 候选项
+            }
+        }
+
+        // 监听获取媒体数据（前提是peerA已添加了媒体流数据）
+        peerB.ontrack = (event) => {
+            document.getElementById('rightVideo').srcObject = event.streams[0]
+        }
+        /**
+         * 媒体协商（交换SDP）
+         */
+        const offer = await peerA.createOffer()
+        await peerA.setLocalDescription(offer)
+
+        await peerB.setRemoteDescription(offer)
+        const answer = await peerB.createAnswer()
+        await peerB.setLocalDescription(answer)
+
+        await peerA.setRemoteDescription(answer)
+    }
+
+    const main = async () => {
+        await createLocalMediaStream()
+    }
+    main()
+
+</script>
+
+</html>
